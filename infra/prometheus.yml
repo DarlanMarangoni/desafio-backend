@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'balance-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['balance-api-1:9001', 'balance-api-2:9001']
+
+  - job_name: 'transaction-consumer'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['transaction-consumer:9000']
