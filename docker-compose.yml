@@ -5,6 +5,8 @@ services:
     image: localstack/localstack:3.7.2
     hostname: localstack
     container_name: localstack
+    networks:
+      - app-network
     environment:
       - AWS_DEFAULT_REGION=sa-east-1
       - AWS_ACCESS_KEY_ID=test
@@ -25,6 +27,8 @@ services:
   mongodb:
     image: mongo:8.0.15
     container_name: mongodb
+    networks:
+      - app-network
     ports:
       - "27017:27017"
     volumes:
@@ -32,10 +36,18 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')", "-u", "admin", "-p", "admin", "--quiet" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    networks:
+      - app-network
     ports:
       - "3000:3000"
     environment:
@@ -44,6 +56,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    networks:
+      - app-network
     volumes:
       - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -52,6 +66,8 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
+    networks:
+      - app-network
     ports:
       - "16686:16686" # UI
       - "4317:4317" # OTLP gRPC
@@ -62,6 +78,8 @@ services:
   message-generator:
     image: golang:1.24.3
     container_name: message-generator
+    networks:
+      - app-network
     depends_on:
       localstack:
         condition: service_healthy
@@ -93,10 +111,12 @@ services:
   nginx:
     image: nginx:latest
     container_name: nginx
+    networks:
+      - app-network
     volumes:
       - ./infra/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "8080:80"
+      - "9091:80"
     depends_on:
       - prometheus
       - balance-api-1
@@ -106,9 +126,11 @@ services:
     build:
       context: ./api/transaction-consumer
     container_name: transaction-consumer
+    networks:
+      - app-network
     depends_on:
       mongodb:
-        condition: service_started
+        condition: service_healthy
       localstack:
         condition: service_healthy
     environment:
@@ -118,10 +140,13 @@ services:
     build:
       context: ./api/balance-api
     container_name: balance-api-1
+    networks:
+      - app-network
     ports:
       - "9001:9001"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9001
@@ -130,13 +155,20 @@ services:
     build:
       context: ./api/balance-api
     container_name: balance-api-2
+    networks:
+      - app-network
     ports:
       - "9002:9001"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9001
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mongo-data:
