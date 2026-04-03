@@ -25,7 +25,7 @@ A solução é composta por dois microserviços desenvolvidos em **Kotlin** com 
 ### Pré-requisitos
 - Docker e Docker Compose
 - Maven 3.9+
-- JDK 24
+- **JDK 21** (Obrigatório para build local devido à compatibilidade do compilador Kotlin 2.0)
 
 ### Passo a Passo
 
