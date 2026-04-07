@@ -1,0 +1,4 @@
+GET http://localhost:9001/balance/c85b3fa1-585c-4dd5-8325-3b12b756cb59
+Accept: application/json
+
+###

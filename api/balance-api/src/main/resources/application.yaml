@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: balance-api
+  mongodb:
+    uri: mongodb://admin:admin@mongodb:27017/sandbox?authSource=admin
+
+server:
+  port: 9001
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health"
+  metrics:
+    tags:
+      application: "balance-api"
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces

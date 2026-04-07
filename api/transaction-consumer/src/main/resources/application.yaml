@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: transaction-consumer
+  mongodb:
+    uri: mongodb://admin:admin@mongodb:27017/sandbox?authSource=admin
+  cloud:
+    aws:
+      region:
+        static: sa-east-1
+      credentials:
+        access-key: test
+        secret-key: test
+      sqs:
+        endpoint: http://localstack:4566
+        region: sa-east-1
+server:
+  port: 9000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health"
+  metrics:
+    tags:
+      application: "transaction-consumer"
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
